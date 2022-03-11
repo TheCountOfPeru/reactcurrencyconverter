@@ -1,24 +1,13 @@
-import React, { useState, useEffect, Component } from "react";
+import React from "react";
 import Select from 'react-select';
-import Switch from "react-switch";
 import DarkModeToggle from "react-dark-mode-toggle";
-
-function getTodaysDate(){
-  var today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-  var yyyy = today.getFullYear();
-  
-  today = yyyy+"-"+mm+"-"+dd;
-  return today;
-}
 
 function CurrencyComboBox(props)
 {
   if(props.currencies == null){
     return (
       <div>
-  <Select/>
+  <Select />
       </div>
     );
   }
@@ -27,7 +16,6 @@ function CurrencyComboBox(props)
     props.currencies.map(item => {
       options.push({value: item, label: item});
     })
-    console.log(options)
     return (
       <div>
           <Select 
@@ -56,7 +44,6 @@ class CurrencyConverter extends React.Component{
       checked: false,
       darkMode: true,
     }
-    
     this.handleAmountOnChange=this.handleAmountOnChange.bind(this);
     this.handleOnClick=this.handleOnClick.bind(this);
     this.handleOnClickFlip=this.handleOnClickFlip.bind(this);
@@ -77,19 +64,13 @@ class CurrencyConverter extends React.Component{
     fetch(API)
     .then(response => response.json())
     .then(response => {
-      console.log(response.data)
-
       var codes = [];
       Object.keys(response.data)
       .map(function(i) {
         codes.push(response.data[i].code)
         return codes;
       });
-      //console.log(codes)
       this.setState({availableCurrencies:codes})
-      //this.setState({availableCurrenciesRate: array2.concat(Object.values(response.data))})
-      //console.log(this.state.availableCurrencies);
-
     })
     .catch(err => {
       console.log(err);
@@ -101,10 +82,7 @@ class CurrencyConverter extends React.Component{
   }
   
   handleOnClick(){ 
-    var today = getTodaysDate();
-    console.log(today);
     var amount = parseFloat(this.state.amount);
-    console.log("handleOnClick")
     const API_KEY = process.env.REACT_APP_KEY; 
     var API;
     if(this.state.fromCurrency === "USD"){
@@ -125,7 +103,6 @@ class CurrencyConverter extends React.Component{
         result = response.data[i].value;
         return result;
       });
-      console.log(result)
       this.setState({result: result})
       this.setState({toCurrencySymbol: this.state.toCurrency})
     })
