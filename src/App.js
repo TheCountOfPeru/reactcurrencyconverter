@@ -1,5 +1,17 @@
 import React, { useState, useEffect, Component } from "react";
 import Select from 'react-select';
+import Switch from "react-switch";
+import DarkModeToggle from "react-dark-mode-toggle";
+
+function getTodaysDate(){
+  var today = new Date();
+  var dd = String(today.getDate()).padStart(2, '0');
+  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  var yyyy = today.getFullYear();
+  
+  today = yyyy+"-"+mm+"-"+dd;
+  return today;
+}
 
 function CurrencyComboBox(props)
 {
@@ -41,7 +53,8 @@ class CurrencyConverter extends React.Component{
       result: null,
       availableCurrencies: null,
       availableCurrenciesRate: null,
-      //options: [],
+      checked: false,
+      darkMode: true,
     }
     
     this.handleAmountOnChange=this.handleAmountOnChange.bind(this);
@@ -49,22 +62,32 @@ class CurrencyConverter extends React.Component{
     this.handleOnClickFlip=this.handleOnClickFlip.bind(this);
     this.handleFromCurrencyChangeCombobox=this.handleFromCurrencyChangeCombobox.bind(this);
     this.handleToCurrencyChangeCombobox=this.handleToCurrencyChangeCombobox.bind(this);
-
+    this.handleChange=this.handleChange.bind(this);
   }
 
+  handleChange(checked) {
+    this.setState({ checked });
+    this.setState({ darkMode: !this.state.darkMode });
+  }
   componentDidMount(){
     console.log("componentDidMount")
     const API_KEY = process.env.REACT_APP_KEY;  
     const API =
-    "https://freecurrencyapi.net/api/v2/latest?apikey="+API_KEY;
+    "https://api.currencyapi.com/v3/latest?apikey="+API_KEY;
     fetch(API)
     .then(response => response.json())
     .then(response => {
-      //console.log(response)
-      const array1 = ['USD'];
-      const array2 = [1];
-      this.setState({availableCurrencies: array1.concat(Object.keys(response.data))  })
-      this.setState({availableCurrenciesRate: array2.concat(Object.values(response.data))})
+      console.log(response.data)
+
+      var codes = [];
+      Object.keys(response.data)
+      .map(function(i) {
+        codes.push(response.data[i].code)
+        return codes;
+      });
+      //console.log(codes)
+      this.setState({availableCurrencies:codes})
+      //this.setState({availableCurrenciesRate: array2.concat(Object.values(response.data))})
       //console.log(this.state.availableCurrencies);
 
     })
@@ -77,30 +100,52 @@ class CurrencyConverter extends React.Component{
     this.setState({amount: event.target.value});
   }
   
-  handleOnClick(){
+  handleOnClick(){ 
+    var today = getTodaysDate();
+    console.log(today);
     var amount = parseFloat(this.state.amount);
-
-    var fromRate = this.state.availableCurrenciesRate[this.state.availableCurrencies.indexOf(this.state.fromCurrency)]
-    var toRate = this.state.availableCurrenciesRate[this.state.availableCurrencies.indexOf(this.state.toCurrency)]
-    console.log(fromRate)
-    console.log(toRate)
-    var newRate = fromRate/toRate;
-    console.log(newRate)
-    this.setState({result: (amount/newRate).toFixed(5)});
-
-    this.setState({fromCurrencySymbol: this.state.fromCurrency})
-    this.setState({toCurrencySymbol: this.state.toCurrency})
+    console.log("handleOnClick")
+    const API_KEY = process.env.REACT_APP_KEY; 
+    var API;
+    if(this.state.fromCurrency === "USD"){
+      API =
+      "https://api.currencyapi.com/v3/convert?apikey="+API_KEY+"&value="+amount+"&currencies="+this.state.toCurrency;
+    }
+    else{
+      API =
+      "https://api.currencyapi.com/v3/convert?apikey="+API_KEY+"&base_currency="+this.state.fromCurrency+"&value="+amount+"&currencies="+this.state.toCurrency;
+    }
+    console.log(API);
+    fetch(API)
+    .then(response => response.json())
+    .then(response => {
+      var result = [];
+      Object.keys(response.data)
+      .map(function(i) {
+        result = response.data[i].value;
+        return result;
+      });
+      console.log(result)
+      this.setState({result: result})
+      this.setState({toCurrencySymbol: this.state.toCurrency})
+    })
+    .catch(err => {
+      console.log(err);
+    });
   }
 
   handleOnClickFlip(){
     let temp = this.state.fromCurrency;
     this.setState({fromCurrency: this.state.toCurrency});
     this.setState({toCurrency: temp});
-
+    temp = this.state.fromCurrencySymbol;
+    this.setState({fromCurrencySymbol: this.state.toCurrencySymbol});
+    this.setState({toCurrencySymbol: temp});
   }
 
   handleFromCurrencyChangeCombobox(obj){
     this.setState({fromCurrency: obj.value});
+    this.setState({fromCurrencySymbol: obj.value});
   }
 
   handleToCurrencyChangeCombobox(obj){
@@ -110,49 +155,62 @@ class CurrencyConverter extends React.Component{
   render() {
     return (
       <>
-      <header class="flex h-14 bg-blue-800"></header>
+      <div>
+      <header class={"flex h-14 " + (this.state.darkMode ? 'bg-white' : 'bg-black')}>
+      <div class="m-3">
+      <DarkModeToggle
+      onChange={this.handleChange}
+      checked={this.state.checked}
+      size={80}
+    />
 
-  <div class=""> 
-  asd
+      </div>
+      </header>
+
+  <div class={"h-7 " + (this.state.darkMode ? 'bg-white' : 'bg-black')} > 
+  
   </div>
-  <div class="">
-  <div class="flex justify-center">
-      <div class="max-w-4xl rounded-xl overflow-hidden shadow-2xl">
-      <div class="font-bold text-xl m-4">Convert</div>
-    <div class="flex px-6 py-4 flex-row">
+  <div class={"flex justify-center h-screen "  + (this.state.darkMode ? 'bg-white' : 'bg-black')}>
+      <div class={"overflow-hidden " + (this.state.darkMode ? 'bg-white' : 'bg-black')}>
+      
+    <div class="flex flex-row">
       <div class="m-4">
-      <p class="text-gray-700 text-base font-bold">
+      <p class={"text-base font-bold "  + (this.state.darkMode ? 'text-black' : 'text-white')}>
       Amount
       </p>
-       <input class="shadow-inner border-2 p-2" type="number" step="any" value={this.state.amount} onChange={this.handleAmountOnChange} autoFocus></input>
+       <input class="border-2 p-1.5" type="number" step="any" value={this.state.amount} onChange={this.handleAmountOnChange} autoFocus></input>
       </div>
       <div class="m-4">
-       <p class="text-gray-700 text-base font-bold">
+      <p class={"text-base font-bold "  + (this.state.darkMode ? 'text-black' : 'text-white')}>
       From
       </p>
       <CurrencyComboBox onChange={this.handleFromCurrencyChangeCombobox} currentCurrency={this.state.fromCurrency} currencies={this.state.availableCurrencies}/>
        </div>
        <div class="m-4">
-         <button class="rounded-3xl shadow-sm bg-gray-200 hover:bg-blue-600 mt-8 p-1" onClick={this.handleOnClickFlip} >Switch</button>
+         <button class={" border-2 hover:bg-blue-600 mt-7 p-1 "   + (this.state.darkMode ? 'text-black' : 'text-white')} onClick={this.handleOnClickFlip} >Switch</button>
        </div>
        <div class="m-4">
-       <p class="text-gray-700 text-base font-bold">
+       <p class={"text-base font-bold "  + (this.state.darkMode ? 'text-black' : 'text-white')}>
       To
       </p>
       <CurrencyComboBox onChange={this.handleToCurrencyChangeCombobox} currentCurrency={this.state.toCurrency} currencies={this.state.availableCurrencies}/>
        </div>
     </div>
-    <div class="font-bold text-xl m-4">
-    {this.state.amount} {this.state.fromCurrencySymbol}
+    <div>
+    <p class={"m-4 font-bold text-xl "  + (this.state.darkMode ? 'text-black' : 'text-white')}>
+    {this.state.amount} {this.state.fromCurrencySymbol} =
+    </p>
+
     </div>
-    <div class="font-bold text-xl m-4">
+    <div>
+    <p class={"m-4 font-bold text-xl "  + (this.state.darkMode ? 'text-black' : 'text-white')}>
     {this.state.result} {this.state.toCurrencySymbol}
+    </p>
+
     </div>
     <div class="flex justify-end m-4">
-      <button class="font-bold text-xl m-4 border-2 rounded-3xl px-6 py-4 hover:bg-blue-600" onClick={this.handleOnClick}>Convert</button>
+      <button class={"font-bold text-xl m-4 border-2  px-6 py-4 hover:bg-blue-600 "   + (this.state.darkMode ? 'text-black' : 'text-white')}  onClick={this.handleOnClick}>Convert</button>
     </div>
-
-
   </div>
   </div>
   </div>
