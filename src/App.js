@@ -39,8 +39,8 @@ class CurrencyConverter extends React.Component{
       fromCurrencySymbol: "USD",
       toCurrencySymbol: null,
       result: null,
-      availableCurrencies: null,
-      availableCurrenciesRate: null,
+      availableCurrencies: [],
+      availableCurrenciesRate: [],
       checked: false,
       darkMode: true,
     }
@@ -65,12 +65,21 @@ class CurrencyConverter extends React.Component{
     .then(response => response.json())
     .then(response => {
       var codes = [];
+      var values = [];
+      
       Object.keys(response.data)
       .map(function(i) {
         codes.push(response.data[i].code)
         return codes;
       });
       this.setState({availableCurrencies:codes})
+
+      Object.keys(response.data)
+      .map(function(i) {
+        values.push(response.data[i].value)
+        return values;
+      });
+      this.setState({availableCurrenciesRate:values})
     })
     .catch(err => {
       console.log(err);
@@ -83,32 +92,11 @@ class CurrencyConverter extends React.Component{
   
   handleOnClick(){ 
     var amount = parseFloat(this.state.amount);
-    const API_KEY = process.env.REACT_APP_KEY; 
-    var API;
-    if(this.state.fromCurrency === "USD"){
-      API =
-      "https://api.currencyapi.com/v3/convert?apikey="+API_KEY+"&value="+amount+"&currencies="+this.state.toCurrency;
-    }
-    else{
-      API =
-      "https://api.currencyapi.com/v3/convert?apikey="+API_KEY+"&base_currency="+this.state.fromCurrency+"&value="+amount+"&currencies="+this.state.toCurrency;
-    }
-    console.log(API);
-    fetch(API)
-    .then(response => response.json())
-    .then(response => {
-      var result = [];
-      Object.keys(response.data)
-      .map(function(i) {
-        result = response.data[i].value;
-        return result;
-      });
-      this.setState({result: result})
-      this.setState({toCurrencySymbol: this.state.toCurrency})
-    })
-    .catch(err => {
-      console.log(err);
-    });
+    var fromCurrencyRate = this.state.availableCurrenciesRate[this.state.availableCurrencies.indexOf(this.state.fromCurrency)]
+    var toCurrencyRate = this.state.availableCurrenciesRate[this.state.availableCurrencies.indexOf(this.state.toCurrency)]
+    var result = amount / fromCurrencyRate * toCurrencyRate
+    this.setState({result: result})
+    this.setState({toCurrencySymbol: this.state.toCurrency})
   }
 
   handleOnClickFlip(){
@@ -127,6 +115,7 @@ class CurrencyConverter extends React.Component{
 
   handleToCurrencyChangeCombobox(obj){
     this.setState({toCurrency: obj.value});
+    this.setState({toCurrencySymbol: obj.value});
   }
 
   render() {
