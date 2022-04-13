@@ -1,5 +1,5 @@
 # React Currency Converter
-This is a single page React app for converting between currencies. It uses Tailwind CSS for the style and uses the https://freecurrencyapi.net/ api to get data about currency rates. It does not use a API to convert between currencies as the freecurrencyapi made that a paid feature recently.
+This is a single page React app for converting between currencies. It uses Tailwind CSS for the style and uses the https://freecurrencyapi.net/ api to get data about currency rates. It does not use a API to convert between currencies as the freecurrencyapi made that a paid feature recently. I did not host this on github pages as it would expose the API key.
 
 ## Get Started
 
